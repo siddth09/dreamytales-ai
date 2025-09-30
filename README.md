@@ -12,12 +12,21 @@
 ---
 
 DreamyTales AI is a magical web application that transforms children's voice commands into beautifully narrated fairy tales. Powered by advanced AI, it sparks creativity and turns storytelling into an interactive, enchanting experience.
+**Generative AI:** The "storyteller", Gemini model generates a completely new, original fairy tale.
+
+**Voice AI:** The "ears and mouth", It includes two key functions:
+
+**Speech-to-Text:** It listens to the child's voice command and converts it into text that the Generative AI can understand.
+
+**Text-to-Speech:** After the story is written, it takes that text and turns it into spoken audio for the child to listen to.
+
+**Conversational AI:** This describes the overall experience. The user interacts with the application in a conversational way—by speaking to it and getting a response (the story and narration). It's an AI designed for natural human interaction.
 
 ---
 
 ## 🌟 Features
 
-- **Voice-to-Story**: Click the microphone, describe your story, and watch the magic happen.
+- **Voice-to-Story (Speech-to-Text)**: Click the microphone, describe your story, and watch the magic happen.
 - **AI-Powered Tales**: Leverages the Google Gemini API to generate unique, age-appropriate fairy tales on any topic.
 - **Text-to-Speech Narration**: Click "Read Aloud" to have your story narrated with a gentle, friendly voice.
 - **Fully Responsive**: Beautiful on desktops, tablets, and mobile phones.
