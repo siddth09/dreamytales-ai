@@ -33,8 +33,9 @@ DreamyTales AI is a magical web application that transforms children's voice com
 
 ## 📺 Demo
 
-*YouTube demo coming soon!*  
-[Watch the Demo](https://www.youtube.com/placeholder-demo-url)
+(https://img.youtube.com/vi/4fgu0A5EHz4/0.jpg)]([https://www.youtube.com/watch?v=4fgu0A5EHz4](https://www.youtube.com/watch?v=4fgu0A5EHz4))  
+
+_Click the image above to watch the demo on YouTube._ 
 
 ---
 
