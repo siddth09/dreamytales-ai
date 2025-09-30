@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DreamyTales AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Baloo+2:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F4F6; /* Light gray background */
+        }
+        .baloo {
+            font-family: 'Baloo 2', cursive;
+        }
+        .story-content {
+            white-space: pre-wrap; /* Preserves line breaks in the story */
+        }
+        /* Custom animation for the microphone icon */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.7;
+            }
+        }
+        .recording {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body class="bg-yellow-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl p-6 md:p-8 space-y-6 border-4 border-purple-300">
+        
+        <!-- Header -->
+        <header class="text-center">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-purple-500" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <h1 class="baloo text-4xl md:text-5xl font-bold text-purple-600">DreamyTales AI</h1>
+            <p class="text-gray-500 mt-2">Tell me a story about...</p>
+        </header>
+        
+        <!-- Prompt and Controls -->
+        <div class="space-y-4">
+            <div class="relative">
+                <textarea id="prompt-input" rows="3" class="w-full p-4 pr-12 text-lg border-2 border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 transition" placeholder="...a brave knight and a friendly dragon."></textarea>
+                <button id="record-button" class="absolute top-1/2 right-4 -translate-y-1/2 text-gray-500 hover:text-purple-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/>
+                    </svg>
+                </button>
+            </div>
+             <button id="generate-button" class="w-full bg-purple-600 text-white font-bold py-3 px-6 rounded-lg text-lg hover:bg-purple-700 transition transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <span>Create My Story!</span>
+            </button>
+        </div>
+
+        <!-- Status Display -->
+        <div id="status-display" class="text-center text-gray-500 h-6"></div>
+
+        <!-- Story and Audio Controls -->
+        <div id="story-container" class="hidden bg-yellow-50 p-6 rounded-lg border-2 border-dashed border-yellow-300 space-y-4">
+            <h2 class="baloo text-2xl font-bold text-yellow-800">Your Magical Tale</h2>
+            <p id="story-content" class="text-gray-700 leading-relaxed"></p>
+            <div id="audio-controls" class="flex items-center justify-center space-x-4 pt-4">
+                 <button id="read-button" class="bg-green-500 text-white font-bold py-2 px-5 rounded-full text-md hover:bg-green-600 transition transform hover:scale-105 disabled:bg-gray-400 flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
+                    </svg>
+                    <span>Read Aloud</span>
+                </button>
+                 <button id="stop-button" class="hidden bg-red-500 text-white font-bold py-2 px-5 rounded-full text-md hover:bg-red-600 transition transform hover:scale-105 flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 8a2 2 0 012-2h0a2 2 0 012 2v4a2 2 0 01-2 2h0a2 2 0 01-2-2V8z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Stop</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const promptInput = document.getElementById('prompt-input');
+        const recordButton = document.getElementById('record-button');
+        const generateButton = document.getElementById('generate-button');
+        const statusDisplay = document.getElementById('status-display');
+        const storyContainer = document.getElementById('story-container');
+        const storyContent = document.getElementById('story-content');
+        const audioControls = document.getElementById('audio-controls');
+        const readButton = document.getElementById('read-button');
+        const stopButton = document.getElementById('stop-button');
+
+        let recognition;
+        let isRecording = false;
+        let audioPlayer = null;
+        
+        // --- Gemini API Configuration ---
+        const TEXT_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=';
+        const TTS_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=';
+        const API_KEY = ""; // Kept empty as per instructions for Canvas environment
+
+        // --- Speech Recognition Setup ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            recognition.onstart = () => {
+                isRecording = true;
+                statusDisplay.textContent = "Listening... speak now! 🎤";
+                recordButton.classList.add('text-red-500', 'recording');
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                statusDisplay.textContent = "";
+                recordButton.classList.remove('text-red-500', 'recording');
+                if (promptInput.value) {
+                    generateButton.disabled = false;
+                }
+            };
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                promptInput.value = finalTranscript + interimTranscript;
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                statusDisplay.textContent = "Oops! I couldn't hear you. Please try again.";
+            };
+        } else {
+            recordButton.disabled = true;
+            promptInput.placeholder = "Sorry, your browser doesn't support voice commands.";
+        }
+        
+        // --- Event Listeners ---
+        recordButton.addEventListener('click', () => {
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                promptInput.value = '';
+                recognition.start();
+            }
+        });
+
+        promptInput.addEventListener('input', () => {
+            generateButton.disabled = !promptInput.value.trim();
+        });
+
+        generateButton.addEventListener('click', generateStory);
+        readButton.addEventListener('click', readStoryAloud);
+        stopButton.addEventListener('click', stopReading);
+        
+        // --- Core Functions ---
+        
+        async function callGeminiApi(url, payload, retryCount = 3, delay = 1000) {
+            try {
+                const response = await fetch(url + API_KEY, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error(`API call failed: ${error.message}. Retrying...`);
+                if (retryCount > 0) {
+                    await new Promise(res => setTimeout(res, delay));
+                    return callGeminiApi(url, payload, retryCount - 1, delay * 2); // Exponential backoff
+                } else {
+                    throw new Error("API call failed after multiple retries.");
+                }
+            }
+        }
+
+        async function generateStory() {
+            const prompt = promptInput.value.trim();
+            if (!prompt) return;
+
+            setLoadingState(true, 'Conjuring a magical tale...');
+            storyContainer.classList.add('hidden');
+            
+            const systemPrompt = "You are a master storyteller for children. Write a short, enchanting, and age-appropriate fairy tale (around 150-200 words) based on the user's prompt. The story should have a clear beginning, middle, and a happy ending. Use simple language and a warm, friendly tone.";
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            try {
+                const result = await callGeminiApi(TEXT_API_URL, payload);
+                const storyText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (storyText) {
+                    storyContent.textContent = storyText;
+                    storyContainer.classList.remove('hidden');
+                    resetAudioControls();
+                } else {
+                    throw new Error("Couldn't generate a story from the response.");
+                }
+            } catch (error) {
+                console.error('Error generating story:', error);
+                statusDisplay.textContent = "Oh no! My magic ink ran out. Please try again.";
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        async function readStoryAloud() {
+            const textToRead = storyContent.textContent;
+            if (!textToRead) return;
+            
+            stopReading(); // Stop any currently playing audio
+            
+            setLoadingState(true, 'Warming up my storytelling voice...');
+            readButton.disabled = true;
+
+            const payload = {
+                contents: [{ parts: [{ text: `Say in a gentle and cheerful storytelling voice: ${textToRead}` }] }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: "Sadachbia" } // A lively, knowledgeable voice
+                        }
+                    }
+                },
+                model: "gemini-2.5-flash-preview-tts"
+            };
+
+            try {
+                const result = await callGeminiApi(TTS_API_URL, payload);
+                const part = result?.candidates?.[0]?.content?.parts?.[0];
+                const audioData = part?.inlineData?.data;
+                const mimeType = part?.inlineData?.mimeType;
+
+                if (audioData && mimeType && mimeType.startsWith("audio/")) {
+                    // The gemini-2.5-flash-preview-tts model outputs at 24000 Hz.
+                    // Hardcoding this value is more robust than parsing the mimeType.
+                    const sampleRate = 24000;
+                    
+                    const pcmData = base64ToArrayBuffer(audioData);
+                    const pcm16 = new Int16Array(pcmData);
+                    const wavBlob = pcmToWav(pcm16, sampleRate);
+                    const audioUrl = URL.createObjectURL(wavBlob);
+                    
+                    audioPlayer = new Audio(audioUrl);
+                    audioPlayer.play();
+                    
+                    statusDisplay.textContent = "Reading your story... 📖";
+                    stopButton.classList.remove('hidden');
+                    
+                    audioPlayer.onended = () => {
+                        resetAudioControls();
+                        statusDisplay.textContent = "The End!";
+                    };
+                } else {
+                    throw new Error("Audio data not found in API response.");
+                }
+            } catch (error) {
+                console.error('Error generating audio:', error);
+                statusDisplay.textContent = "My voice is a little hoarse. Couldn't read the story.";
+                readButton.disabled = false;
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        function stopReading() {
+            if (audioPlayer) {
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
+                audioPlayer = null;
+                resetAudioControls();
+                statusDisplay.textContent = "";
+            }
+        }
+
+        // --- UI Helper Functions ---
+        function setLoadingState(isLoading, message = '') {
+            generateButton.disabled = isLoading;
+            statusDisplay.textContent = message;
+        }
+
+        function resetAudioControls() {
+            readButton.disabled = false;
+            stopButton.classList.add('hidden');
+        }
+
+        // --- Audio Conversion Helpers ---
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function pcmToWav(pcmData, sampleRate) {
+            const numChannels = 1;
+            const bitsPerSample = 16;
+            const blockAlign = (numChannels * bitsPerSample) / 8;
+            const byteRate = sampleRate * blockAlign;
+            const dataSize = pcmData.length * (bitsPerSample / 8);
+            const buffer = new ArrayBuffer(44 + dataSize);
+            const view = new DataView(buffer);
+
+            // RIFF chunk descriptor
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + dataSize, true);
+            writeString(view, 8, 'WAVE');
+            // "fmt " sub-chunk
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true); // PCM
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, byteRate, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitsPerSample, true);
+            // "data" sub-chunk
+            writeString(view, 36, 'data');
+            view.setUint32(40, dataSize, true);
+
+            // Write PCM data
+            for (let i = 0; i < pcmData.length; i++) {
+                view.setInt16(44 + i * 2, pcmData[i], true);
+            }
+
+            return new Blob([view], { type: 'audio/wav' });
+        }
+        
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+    </script>
+</body>
+</html>
+
