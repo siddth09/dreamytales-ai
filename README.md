@@ -6,7 +6,7 @@
 
 **AI Powered Fairy Tales Weaver**
 
-[![Demo Video](https://img.shields.io/badge/YouTube-Demo-red?logo=youtube)](https://www.youtube.com/placeholder-demo-url)
+[![Demo Video](https://img.shields.io/badge/YouTube-Demo-red?logo=youtube)](https://www.youtube.com/watch?v=4fgu0A5EHz4)
 [![Live App](https://img.shields.io/badge/Live%20App-Visit%20Now-brightgreen?logo=netlify)](https://dreamytalesai.netlify.app/)
 
 ---
