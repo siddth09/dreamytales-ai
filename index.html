@@ -172,7 +172,7 @@
         
         // --- Core Functions ---
         
-        async function callSecureApi(type, payload, retryCount = 3, delay = 1000) {
+        async function callSecureApi(type, payload) {
             try {
                 // Using a relative path is the standard and correct way for the app 
                 // to call its own function when deployed on Netlify.
