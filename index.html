@@ -104,10 +104,9 @@
         let isRecording = false;
         let audioPlayer = null;
         
-        // --- Gemini API Configuration ---
-        const TEXT_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=';
-        const TTS_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=';
-        const API_KEY = ""; // Kept empty as per instructions for Canvas environment
+        // --- Secure API Configuration ---
+        // This is the endpoint for our secure Netlify function.
+        const SECURE_API_ENDPOINT = '/.netlify/functions/generate';
 
         // --- Speech Recognition Setup ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -173,22 +172,26 @@
         
         // --- Core Functions ---
         
-        async function callGeminiApi(url, payload, retryCount = 3, delay = 1000) {
+        async function callSecureApi(type, payload, retryCount = 3, delay = 1000) {
             try {
-                const response = await fetch(url + API_KEY, {
+                // Construct an absolute URL from the relative path to prevent parsing errors.
+                const url = new URL(SECURE_API_ENDPOINT, window.location.href).href;
+
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ type, payload }) // Send type and payload to our function
                 });
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
                 }
                 return await response.json();
             } catch (error) {
                 console.error(`API call failed: ${error.message}. Retrying...`);
                 if (retryCount > 0) {
                     await new Promise(res => setTimeout(res, delay));
-                    return callGeminiApi(url, payload, retryCount - 1, delay * 2); // Exponential backoff
+                    return callSecureApi(type, payload, retryCount - 1, delay * 2); // Exponential backoff
                 } else {
                     throw new Error("API call failed after multiple retries.");
                 }
@@ -210,7 +213,7 @@
             };
 
             try {
-                const result = await callGeminiApi(TEXT_API_URL, payload);
+                const result = await callSecureApi('text', payload); // Call our secure function
                 const storyText = result.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (storyText) {
                     storyContent.textContent = storyText;
@@ -250,14 +253,12 @@
             };
 
             try {
-                const result = await callGeminiApi(TTS_API_URL, payload);
+                const result = await callSecureApi('tts', payload); // Call our secure function
                 const part = result?.candidates?.[0]?.content?.parts?.[0];
                 const audioData = part?.inlineData?.data;
                 const mimeType = part?.inlineData?.mimeType;
 
                 if (audioData && mimeType && mimeType.startsWith("audio/")) {
-                    // The gemini-2.5-flash-preview-tts model outputs at 24000 Hz.
-                    // Hardcoding this value is more robust than parsing the mimeType.
                     const sampleRate = 24000;
                     
                     const pcmData = base64ToArrayBuffer(audioData);
@@ -312,7 +313,7 @@
         function base64ToArrayBuffer(base64) {
             const binaryString = window.atob(base64);
             const len = binaryString.length;
-            const bytes = new Uint8Array(len);
+            const bytes = new Uint8_tArray(len);
             for (let i = 0; i < len; i++) {
                 bytes[i] = binaryString.charCodeAt(i);
             }
