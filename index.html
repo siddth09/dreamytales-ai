@@ -174,10 +174,9 @@
         
         async function callSecureApi(type, payload, retryCount = 3, delay = 1000) {
             try {
-                // Construct an absolute URL from the relative path to prevent parsing errors.
-                const url = new URL(SECURE_API_ENDPOINT, window.location.href).href;
-
-                const response = await fetch(url, {
+                // Using a relative path is the standard and correct way for the app 
+                // to call its own function when deployed on Netlify.
+                const response = await fetch(SECURE_API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ type, payload }) // Send type and payload to our function
@@ -313,7 +312,7 @@
         function base64ToArrayBuffer(base64) {
             const binaryString = window.atob(base64);
             const len = binaryString.length;
-            const bytes = new Uint8_tArray(len);
+            const bytes = new Uint8Array(len);
             for (let i = 0; i < len; i++) {
                 bytes[i] = binaryString.charCodeAt(i);
             }
