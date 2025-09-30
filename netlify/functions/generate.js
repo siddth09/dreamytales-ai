@@ -1,35 +1,38 @@
-// This is your secure serverless function.
-// It runs on Netlify's servers, not in the user's browser.
+// --- Netlify Serverless Function ---
+// This function acts as a secure bridge between your app and the Google Gemini API.
 
-exports.handler = async function (event, context) {
+// The handler function is the main entry point for the serverless function.
+export async function handler(event) {
     // Only allow POST requests.
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
-    // Get the API key from the secret environment variables.
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-        return { statusCode: 500, body: 'API key not found.' };
+    // Retrieve the secret API key from Netlify's environment variables.
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+    if (!GEMINI_API_KEY) {
+        return { statusCode: 500, body: JSON.stringify({ error: 'API key not configured.' }) };
     }
 
     try {
+        // Parse the incoming request from your frontend.
         const { type, payload } = JSON.parse(event.body);
 
-        let apiUrl = '';
-        if (type === 'text') {
-            apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent';
-        } else if (type === 'tts') {
-            apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent';
-        } else {
-            return { statusCode: 400, body: 'Invalid request type.' };
-        }
-        
-        // We are using 'node-fetch' which is available in Netlify functions.
-        const fetch = (await import('node-fetch')).default;
+        let apiUrl;
 
-        // Call the Google API from the server, including the secret key.
-        const response = await fetch(`${apiUrl}?key=${apiKey}`, {
+        // Determine the correct Google API URL based on the request type (text or TTS).
+        if (type === 'text') {
+            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
+        } else if (type === 'tts') {
+            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${GEMINI_API_KEY}`;
+        } else {
+            return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request type.' }) };
+        }
+
+        // Securely call the Google API from the server.
+        // We use the built-in fetch, no import needed.
+        const response = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -38,19 +41,24 @@ exports.handler = async function (event, context) {
         if (!response.ok) {
             const errorBody = await response.text();
             console.error('Google API Error:', errorBody);
-            return { statusCode: response.status, body: `Google API Error: ${errorBody}` };
+            return { statusCode: response.status, body: JSON.stringify({ error: `Google API failed: ${errorBody}` }) };
         }
 
         const data = await response.json();
-
-        // Send the result from Google back to the browser.
+        
+        // Send the successful response back to the frontend app.
         return {
             statusCode: 200,
-            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
         };
 
     } catch (error) {
         console.error('Error in serverless function:', error);
-        return { statusCode: 500, body: error.toString() };
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: error.message })
+        };
     }
-};
+}
+
