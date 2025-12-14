@@ -96,7 +96,7 @@
 
         let recognition;
         let isRecording = false;
-        // let audioPlayer = null; // COMMENT: audioPlayer is no longer needed for browser TTS.
+        // The audioPlayer variable used for Gemini TTS is no longer needed.
         
         // --- Speech Recognition Setup ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -166,8 +166,7 @@
             // Use a relative path. This is the standard and most reliable way for the live site.
             const fetchUrl = '/.netlify/functions/generate';
 
-            // NOTE: When using browser TTS, the 'tts' type call is no longer necessary.
-            // You will still use this function for 'text' generation.
+            // NOTE: Only 'text' type calls are made from the frontend now.
 
             try {
                 const response = await fetch(fetchUrl, {
@@ -184,7 +183,6 @@
 
             } catch (error) {
                 console.error(`API call failed: ${error.message}.`);
-                // The broken retry logic has been removed. We now throw a single, clear error.
                 throw new Error("API call failed."); 
             }
         }
@@ -280,22 +278,8 @@
             stopButton.classList.add('hidden');
         }
 
-        // --- COMMENT: The following functions were for Gemini TTS audio conversion and are now removed/commented out ---
-
-        /*
-        function base64ToArrayBuffer(base64) { 
-            // ... (Removed)
-        }
-
-        function pcmToWav(pcmData, sampleRate) {
-            // ... (Removed)
-        }
-        
-        function writeString(view, offset, string) {
-            // ... (Removed)
-        }
-        */
-
+        // --- COMMENT: The following functions were for Gemini TTS audio conversion and are now removed (or were commented out) ---
+        // These functions are no longer in the code to prevent the original audio playback error.
     </script>
 </body>
 </html>
