@@ -98,6 +98,51 @@
         let isRecording = false;
         // The audioPlayer variable used for Gemini TTS is no longer needed.
         
+        // --- Globals for TTS Voice Selection ---
+        let preferredVoice = null;
+        const synth = window.speechSynthesis;
+
+        // --- Voice Selection Logic (Enhanced for Chrome/Google Voices) ---
+        function loadVoices() {
+            const voices = synth.getVoices();
+            if (voices.length === 0) {
+                // Voices not ready yet, will be called again by onvoiceschanged
+                return; 
+            }
+
+            // 1. HIGHEST PRIORITY: Look for Google's highest quality voices or other known good ones (Zira, Karen, Samantha).
+            // These typically offer the clearest, most natural sound in Chrome.
+            preferredVoice = voices.find(voice => 
+                voice.lang.match(/en-(US|GB)/i) && 
+                (
+                    voice.name.includes('Google') || 
+                    voice.name.includes('Microsoft') ||
+                    voice.name.includes('Zira') || 
+                    voice.name.includes('Karen') ||
+                    voice.name.includes('Samantha')
+                )
+            );
+
+            // 2. Secondary Priority: Try to find an explicit "Female" voice.
+            if (!preferredVoice) {
+                preferredVoice = voices.find(voice => 
+                    voice.lang.match(/en-(US|GB)/i) && 
+                    (voice.name.includes('Female') || voice.name.includes('Susan'))
+                );
+            }
+
+            // 3. Tertiary Priority: Any English (US or GB) voice
+            if (!preferredVoice) {
+                preferredVoice = voices.find(voice => voice.lang.match(/en-(US|GB)/i));
+            }
+            
+            // Fallback: Just use the first available voice
+            if (!preferredVoice) {
+                preferredVoice = voices[0];
+            }
+            console.log("TTS Voice Loaded:", preferredVoice ? preferredVoice.name : "Default");
+        }
+
         // --- Speech Recognition Setup ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognition) {
@@ -228,12 +273,9 @@
             // 1. Create a speech synthesis utterance
             const utterance = new SpeechSynthesisUtterance(textToRead);
 
-            // 2. OPTIONAL: Set a friendly voice
-            const voices = speechSynthesis.getVoices();
-            // Tries to find a suitable voice, otherwise uses the default.
-            const childVoice = voices.find(v => v.name.includes('Google') && v.name.includes('Female')) || voices[0];
-            if (childVoice) {
-                utterance.voice = childVoice;
+            // 2. Set the preferred voice found by loadVoices()
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
                 utterance.rate = 1.0; // Adjust rate for better storytelling
             }
 
@@ -278,6 +320,14 @@
             stopButton.classList.add('hidden');
         }
 
+        // --- Initialization ---
+        // Ensure the preferredVoice is set as soon as the browser loads voices.
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = loadVoices;
+        }
+        // Also call immediately, as voices might be ready instantly in some browsers.
+        loadVoices(); 
+        
         // --- COMMENT: The following functions were for Gemini TTS audio conversion and are now removed (or were commented out) ---
         // These functions are no longer in the code to prevent the original audio playback error.
     </script>
