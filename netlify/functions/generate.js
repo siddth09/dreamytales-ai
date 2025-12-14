@@ -20,12 +20,14 @@ export async function handler(event) {
         const { type, payload } = JSON.parse(event.body);
 
         let apiUrl;
-
+        
         // Determine the correct Google API URL based on the request type (text or TTS).
         if (type === 'text') {
-            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
+            // *** FIX 1: Updated to the stable model alias ***
+            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
         } else if (type === 'tts') {
-            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${GEMINI_API_KEY}`;
+            // *** FIX 2: Updated to the stable TTS model alias ***
+            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-tts:generateContent?key=${GEMINI_API_KEY}`;
         } else {
             return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request type.' }) };
         }
@@ -41,6 +43,7 @@ export async function handler(event) {
         if (!response.ok) {
             const errorBody = await response.text();
             console.error('Google API Error:', errorBody);
+            // This will now correctly catch 404 (if not fixed) or 429 (quota issue)
             return { statusCode: response.status, body: JSON.stringify({ error: `Google API failed: ${errorBody}` }) };
         }
 
@@ -61,4 +64,3 @@ export async function handler(event) {
         };
     }
 }
-
