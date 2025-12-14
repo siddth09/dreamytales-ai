@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DreamyTales AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Baloo+2:wght@700&display=swap" rel="stylesheet">
@@ -37,15 +37,12 @@
 
     <div class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl p-6 md:p-8 space-y-6 border-4 border-purple-300">
         
-        <!-- Header -->
-        <!-- Header -->
         <header class="text-center">
             <img src="assets/drmytls.png" alt="DreamyTales AI Logo" class="mx-auto mb-4 w-32 md:w-40 rounded-full shadow-lg"/>
             <h1 class="baloo text-4xl md:text-5xl font-bold text-purple-600">DreamyTales AI</h1>
             <p class="text-gray-500 mt-2">Tell me a story about...</p>
         </header>
         
-        <!-- Prompt and Controls -->
         <div class="space-y-4">
             <div class="relative">
                 <textarea id="prompt-input" rows="3" class="w-full p-4 pr-12 text-lg border-2 border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 transition" placeholder="...a brave knight and a friendly dragon."></textarea>
@@ -63,10 +60,8 @@
             </button>
         </div>
 
-        <!-- Status Display -->
         <div id="status-display" class="text-center text-gray-500 h-6"></div>
 
-        <!-- Story and Audio Controls -->
         <div id="story-container" class="hidden bg-yellow-50 p-6 rounded-lg border-2 border-dashed border-yellow-300 space-y-4">
             <h2 class="baloo text-2xl font-bold text-yellow-800">Your Magical Tale</h2>
             <p id="story-content" class="text-gray-700 leading-relaxed"></p>
@@ -101,7 +96,7 @@
 
         let recognition;
         let isRecording = false;
-        let audioPlayer = null;
+        // let audioPlayer = null; // COMMENT: audioPlayer is no longer needed for browser TTS.
         
         // --- Speech Recognition Setup ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -171,6 +166,9 @@
             // Use a relative path. This is the standard and most reliable way for the live site.
             const fetchUrl = '/.netlify/functions/generate';
 
+            // NOTE: When using browser TTS, the 'tts' type call is no longer necessary.
+            // You will still use this function for 'text' generation.
+
             try {
                 const response = await fetch(fetchUrl, {
                     method: 'POST',
@@ -206,7 +204,8 @@
             };
 
             try {
-                const result = await callSecureApi('text', payload);
+                // This call remains necessary for generating the text content
+                const result = await callSecureApi('text', payload); 
                 const storyText = result.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (storyText) {
                     storyContent.textContent = storyText;
@@ -223,62 +222,48 @@
             }
         }
 
-        async function readStoryAloud() {
+        // --- NEW Browser TTS Implementation (Option 2) ---
+        function readStoryAloud() {
             const textToRead = storyContent.textContent;
             if (!textToRead) return;
-            
-            stopReading();
-            
-            setLoadingState(true, 'Warming up my storytelling voice...');
-            readButton.disabled = true;
 
-            const payload = {
-                contents: [{ parts: [{ text: `Say in a gentle and cheerful storytelling voice: ${textToRead}` }] }],
-                generationConfig: { responseModalities: ["AUDIO"] },
-                model: "gemini-2.5-flash-preview-tts"
+            // 1. Create a speech synthesis utterance
+            const utterance = new SpeechSynthesisUtterance(textToRead);
+
+            // 2. OPTIONAL: Set a friendly voice
+            const voices = speechSynthesis.getVoices();
+            // Tries to find a suitable voice, otherwise uses the default.
+            const childVoice = voices.find(v => v.name.includes('Google') && v.name.includes('Female')) || voices[0];
+            if (childVoice) {
+                utterance.voice = childVoice;
+                utterance.rate = 1.0; // Adjust rate for better storytelling
+            }
+
+            // 3. Set UI state
+            statusDisplay.textContent = "Reading your story with the browser's voice... 📖";
+            readButton.disabled = true;
+            stopButton.classList.remove('hidden');
+
+            // 4. Set stop/end handlers
+            utterance.onend = () => {
+                resetAudioControls();
+                statusDisplay.textContent = "The End!";
             };
 
-            try {
-                const result = await callSecureApi('tts', payload);
-                const part = result?.candidates?.[0]?.content?.parts?.[0];
-                const audioData = part?.inlineData?.data;
-                const mimeType = part?.inlineData?.mimeType;
-
-                if (audioData && mimeType?.startsWith("audio/")) {
-                    const sampleRate = 24000;
-                    const pcmData = base64ToArrayBuffer(audioData);
-                    const pcm16 = new Int16Array(pcmData);
-                    const wavBlob = pcmToWav(pcm16, sampleRate);
-                    const audioUrl = URL.createObjectURL(wavBlob);
-                    
-                    audioPlayer = new Audio(audioUrl);
-                    audioPlayer.play();
-                    
-                    statusDisplay.textContent = "Reading your story... 📖";
-                    stopButton.classList.remove('hidden');
-                    
-                    audioPlayer.onended = () => {
-                        resetAudioControls();
-                        statusDisplay.textContent = "The End!";
-                    };
-                } else {
-                    throw new Error("Audio data not found in API response.");
-                }
-            } catch (error) {
-                console.error('Error generating audio:', error);
-                // The specific error message for timeouts has been removed.
-                statusDisplay.textContent = "My voice is a little hoarse. Couldn't read the story.";
-                readButton.disabled = false;
-            } finally {
-                setLoadingState(false, '');
-            }
+            utterance.onerror = (e) => {
+                console.error("Browser TTS Error:", e);
+                resetAudioControls();
+                statusDisplay.textContent = "Browser TTS failed.";
+            };
+            
+            // 5. Speak!
+            window.speechSynthesis.speak(utterance);
         }
 
         function stopReading() {
-            if (audioPlayer) {
-                audioPlayer.pause();
-                audioPlayer.currentTime = 0;
-                audioPlayer = null;
+            // Stops all browser speech synthesis immediately
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
                 resetAudioControls();
                 statusDisplay.textContent = "";
             }
@@ -295,54 +280,22 @@
             stopButton.classList.add('hidden');
         }
 
-        // --- Audio Conversion Helpers ---
-        function base64ToArrayBuffer(base64) {
-            const binaryString = window.atob(base64);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            return bytes.buffer;
+        // --- COMMENT: The following functions were for Gemini TTS audio conversion and are now removed/commented out ---
+
+        /*
+        function base64ToArrayBuffer(base64) { 
+            // ... (Removed)
         }
 
         function pcmToWav(pcmData, sampleRate) {
-            const numChannels = 1;
-            const bitsPerSample = 16;
-            const blockAlign = (numChannels * bitsPerSample) / 8;
-            const byteRate = sampleRate * blockAlign;
-            const dataSize = pcmData.length * (bitsPerSample / 8);
-            const buffer = new ArrayBuffer(44 + dataSize);
-            const view = new DataView(buffer);
-
-            writeString(view, 0, 'RIFF');
-            view.setUint32(4, 36 + dataSize, true);
-            writeString(view, 8, 'WAVE');
-            writeString(view, 12, 'fmt ');
-            view.setUint32(16, 16, true);
-            view.setUint16(20, 1, true);
-            view.setUint16(22, numChannels, true);
-            view.setUint32(24, sampleRate, true);
-            view.setUint32(28, byteRate, true);
-            view.setUint16(32, blockAlign, true);
-            view.setUint16(34, bitsPerSample, true);
-            writeString(view, 36, 'data');
-            view.setUint32(40, dataSize, true);
-
-            for (let i = 0; i < pcmData.length; i++) {
-                view.setInt16(44 + i * 2, pcmData[i], true);
-            }
-
-            return new Blob([view], { type: 'audio/wav' });
+            // ... (Removed)
         }
         
         function writeString(view, offset, string) {
-            for (let i = 0; i < string.length; i++) {
-                view.setUint8(offset + i, string.charCodeAt(i));
-            }
+            // ... (Removed)
         }
+        */
 
     </script>
 </body>
 </html>
-
