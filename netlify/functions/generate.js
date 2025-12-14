@@ -23,10 +23,10 @@ export async function handler(event) {
         
         // Determine the correct Google API URL based on the request type (text or TTS).
         if (type === 'text') {
-            // *** FIX 1: Updated to the stable model alias ***
+            // *** FIX 1: Updated to the stable model alias, resolving the 404 error ***
             apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
         } else if (type === 'tts') {
-            // *** FIX 2: Updated to the stable TTS model alias ***
+            // *** FIX 2: Updated to the stable TTS model alias, kept for future use ***
             apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-tts:generateContent?key=${GEMINI_API_KEY}`;
         } else {
             return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request type.' }) };
@@ -43,7 +43,7 @@ export async function handler(event) {
         if (!response.ok) {
             const errorBody = await response.text();
             console.error('Google API Error:', errorBody);
-            // This will now correctly catch 404 (if not fixed) or 429 (quota issue)
+            // This error handling now correctly catches 404 (fixed) or 429 (quota issue)
             return { statusCode: response.status, body: JSON.stringify({ error: `Google API failed: ${errorBody}` }) };
         }
 
