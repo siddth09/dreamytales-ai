@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DreamyTales AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Added Tesseract.js for OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- Added PDF.js for PDF reading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Baloo+2:wght@700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -38,19 +42,38 @@
     <div class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl p-6 md:p-8 space-y-6 border-4 border-purple-300">
         
         <header class="text-center">
-            <img src="assets/drmytls.png" alt="DreamyTales AI Logo" class="mx-auto mb-4 w-32 md:w-40 rounded-full shadow-lg"/>
+            <!-- Updated image tag with a fallback placeholder URL -->
+            <img 
+                src="assets/drmytls.png" 
+                alt="DreamyTales AI Logo" 
+                class="mx-auto mb-4 w-32 md:w-40 rounded-full shadow-lg" 
+                onerror="this.onerror=null; this.src='https://placehold.co/160x160/9333ea/ffffff?text=Dreamy+Tales'"
+            />
             <h1 class="baloo text-4xl md:text-5xl font-bold text-purple-600">DreamyTales AI</h1>
             <p class="text-gray-500 mt-2">Tell me a story about...</p>
         </header>
         
         <div class="space-y-4">
             <div class="relative">
-                <textarea id="prompt-input" rows="3" class="w-full p-4 pr-12 text-lg border-2 border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 transition" placeholder="...a brave knight and a friendly dragon."></textarea>
-                <button id="record-button" class="absolute top-1/2 right-4 -translate-y-1/2 text-gray-500 hover:text-purple-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/>
-                    </svg>
-                </button>
+                <textarea id="prompt-input" rows="3" class="w-full p-4 pr-24 text-lg border-2 border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 transition resize-none" placeholder="...a brave knight and a friendly dragon."></textarea>
+                
+                <!-- Controls Container (Mic + Upload) -->
+                <div class="absolute top-1/2 right-3 -translate-y-1/2 flex items-center space-x-1 bg-white pl-2">
+                    <!-- Upload Button -->
+                    <label for="doc-upload" class="p-2 text-gray-400 hover:text-purple-600 cursor-pointer transition" title="Upload Image or PDF">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                    </label>
+                    <input id="doc-upload" type="file" accept=".jpg,.jpeg,.png,.pdf" class="hidden" />
+
+                    <!-- Record Button -->
+                    <button id="record-button" class="p-2 text-gray-500 hover:text-purple-600 transition" title="Voice Input">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
              <button id="generate-button" class="w-full bg-purple-600 text-white font-bold py-3 px-6 rounded-lg text-lg hover:bg-purple-700 transition transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -84,6 +107,9 @@
     </div>
 
     <script>
+        // Configure PDF.js Worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
         const promptInput = document.getElementById('prompt-input');
         const recordButton = document.getElementById('record-button');
         const generateButton = document.getElementById('generate-button');
@@ -93,10 +119,10 @@
         const audioControls = document.getElementById('audio-controls');
         const readButton = document.getElementById('read-button');
         const stopButton = document.getElementById('stop-button');
+        const docUploadInput = document.getElementById('doc-upload');
 
         let recognition;
         let isRecording = false;
-        // The audioPlayer variable used for Gemini TTS is no longer needed.
         
         // --- Globals for TTS Voice Selection ---
         let preferredVoice = null;
@@ -110,8 +136,7 @@
                 return; 
             }
 
-            // 1. HIGHEST PRIORITY: Look for Google's highest quality voices or other known good ones (Zira, Karen, Samantha).
-            // These typically offer the clearest, most natural sound in Chrome.
+            // 1. HIGHEST PRIORITY: Look for Google's highest quality voices or other known good ones.
             preferredVoice = voices.find(voice => 
                 voice.lang.match(/en-(US|GB)/i) && 
                 (
@@ -176,6 +201,7 @@
                     }
                 }
                 promptInput.value = finalTranscript + interimTranscript;
+                generateButton.disabled = !promptInput.value.trim();
             };
 
             recognition.onerror = (event) => {
@@ -187,6 +213,54 @@
             promptInput.placeholder = "Sorry, your browser doesn't support voice commands.";
         }
         
+        // --- Document Upload & OCR Logic ---
+        docUploadInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            statusDisplay.textContent = "📄 Reading your document...";
+            generateButton.disabled = true;
+            promptInput.disabled = true;
+
+            try {
+                if (file.type === 'application/pdf') {
+                    // PDF Handling
+                    if (!window.pdfjsLib) throw new Error("PDF library not loaded");
+                    
+                    const buffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument(buffer).promise;
+                    // Read first page only for prompt
+                    const page = await pdf.getPage(1);
+                    const txt = await page.getTextContent();
+                    const str = txt.items.map(i => i.str).join(' ');
+                    
+                    // Append to existing text or replace? Let's replace for a fresh idea.
+                    promptInput.value = str;
+                } else {
+                    // Image OCR Handling (Tesseract)
+                    const worker = await Tesseract.createWorker('eng', 1, {
+                        logger: m => console.log(m)
+                    });
+                    
+                    const { data: { text } } = await worker.recognize(file);
+                    promptInput.value = text;
+                    
+                    await worker.terminate();
+                }
+                
+                statusDisplay.textContent = "✅ Document read successfully!";
+                setTimeout(() => { statusDisplay.textContent = ""; }, 2000);
+
+            } catch (err) {
+                console.error(err);
+                statusDisplay.textContent = "❌ Couldn't read the file. Try a clear image or PDF.";
+            } finally {
+                generateButton.disabled = false;
+                promptInput.disabled = false;
+                promptInput.dispatchEvent(new Event('input')); // Trigger input event to check button state
+            }
+        });
+
         // --- Event Listeners ---
         recordButton.addEventListener('click', () => {
             if (isRecording) {
@@ -207,29 +281,55 @@
         
         // --- Core Functions ---
         
+        // Cache the working API endpoint so we don't have to check every time
+        let workingApiEndpoint = null;
+
         async function callSecureApi(type, payload) {
-            // Use a relative path. This is the standard and most reliable way for the live site.
-            const fetchUrl = '/.netlify/functions/generate';
-
-            // NOTE: Only 'text' type calls are made from the frontend now.
-
-            try {
-                const response = await fetch(fetchUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type, payload })
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+            // Priority list: Vercel standard path first, then Netlify standard path
+            const endpoints = ['/api/generate', '/.netlify/functions/generate'];
+            
+            // If we already found the working endpoint, prioritize it
+            if (workingApiEndpoint) {
+                const index = endpoints.indexOf(workingApiEndpoint);
+                if (index > -1) {
+                    endpoints.splice(index, 1);
+                    endpoints.unshift(workingApiEndpoint);
                 }
-                return await response.json();
-
-            } catch (error) {
-                console.error(`API call failed: ${error.message}.`);
-                throw new Error("API call failed."); 
             }
+
+            let lastError;
+
+            // Try endpoints in order
+            for (const url of endpoints) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type, payload })
+                    });
+
+                    // If 404, the function likely resides at the other endpoint, so continue loop
+                    if (response.status === 404) {
+                        continue;
+                    }
+
+                    // If we get here, the endpoint exists (even if it returned a 500/400 error)
+                    workingApiEndpoint = url;
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                    }
+                    return await response.json();
+
+                } catch (error) {
+                    lastError = error;
+                }
+            }
+
+            // If loop finishes without success
+            console.error(`API call failed: ${lastError?.message || 'No endpoints found'}.`);
+            throw new Error("API call failed. Please check your connection."); 
         }
 
         async function generateStory() {
@@ -328,8 +428,6 @@
         // Also call immediately, as voices might be ready instantly in some browsers.
         loadVoices(); 
         
-        // --- COMMENT: The following functions were for Gemini TTS audio conversion and are now removed (or were commented out) ---
-        // These functions are no longer in the code to prevent the original audio playback error.
     </script>
 </body>
 </html>
