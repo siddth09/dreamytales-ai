@@ -1,66 +1,82 @@
-// --- Netlify Serverless Function ---
-// This function acts as a secure bridge between your app and the Google Gemini API.
+// --- Unified Serverless Function (Vercel & Netlify) ---
+// This file exports both a named handler (Netlify) and a default handler (Vercel).
+// It acts as a bridge to the Google Gemini API.
 
-// The handler function is the main entry point for the serverless function.
+// --- CORE LOGIC (Platform Agnostic) ---
+async function handleGeminiRequest(bodyObject) {
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+    if (!GEMINI_API_KEY) {
+        throw new Error('API key not configured in environment variables.');
+    }
+
+    const { type, payload } = bodyObject;
+    let apiUrl;
+
+    if (type === 'text') {
+        apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    } else if (type === 'tts') {
+        apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-tts:generateContent?key=${GEMINI_API_KEY}`;
+    } else {
+        throw new Error('Invalid request type.');
+    }
+
+    const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`Google API failed (${response.status}): ${errorBody}`);
+    }
+
+    return await response.json();
+}
+
+// --- NETLIFY HANDLER (Named Export) ---
+// Netlify functions use the signature: async (event, context) => { statusCode, body }
 export async function handler(event) {
-    // Only allow POST requests.
+    // Only allow POST
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
-    // Retrieve the secret API key from Netlify's environment variables.
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
-    if (!GEMINI_API_KEY) {
-        return { statusCode: 500, body: JSON.stringify({ error: 'API key not configured.' }) };
-    }
-
     try {
-        // Parse the incoming request from your frontend.
-        const { type, payload } = JSON.parse(event.body);
-
-        let apiUrl;
+        const body = JSON.parse(event.body);
+        const data = await handleGeminiRequest(body);
         
-        // Determine the correct Google API URL based on the request type (text or TTS).
-        if (type === 'text') {
-            // *** FIX 1: Updated to the stable model alias, resolving the 404 error ***
-            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-        } else if (type === 'tts') {
-            // *** FIX 2: Updated to the stable TTS model alias, kept for future use ***
-            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-tts:generateContent?key=${GEMINI_API_KEY}`;
-        } else {
-            return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request type.' }) };
-        }
-
-        // Securely call the Google API from the server.
-        // We use the built-in fetch, no import needed.
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error('Google API Error:', errorBody);
-            // This error handling now correctly catches 404 (fixed) or 429 (quota issue)
-            return { statusCode: response.status, body: JSON.stringify({ error: `Google API failed: ${errorBody}` }) };
-        }
-
-        const data = await response.json();
-        
-        // Send the successful response back to the frontend app.
         return {
             statusCode: 200,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         };
-
     } catch (error) {
-        console.error('Error in serverless function:', error);
+        console.error('Netlify Handler Error:', error);
         return {
-            statusCode: 500,
+            statusCode: error.message.includes('API key') ? 500 : 400,
             body: JSON.stringify({ error: error.message })
         };
+    }
+}
+
+// --- VERCEL HANDLER (Default Export) ---
+// Vercel functions use the signature: (req, res) => void
+export default async function(req, res) {
+    // Only allow POST
+    if (req.method !== 'POST') {
+        return res.status(405).send('Method Not Allowed');
+    }
+
+    try {
+        // Vercel usually parses JSON body automatically if Content-Type is application/json
+        const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        const data = await handleGeminiRequest(body);
+        
+        return res.status(200).json(data);
+    } catch (error) {
+        console.error('Vercel Handler Error:', error);
+        return res.status(error.message.includes('API key') ? 500 : 400).json({ error: error.message });
     }
 }
