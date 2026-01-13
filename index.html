@@ -5,9 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DreamyTales AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Added Tesseract.js for OCR -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Baloo 2', 'cursive'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Tesseract.js for OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <!-- Added PDF.js for PDF reading -->
+    <!-- PDF.js for PDF reading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Baloo+2:wght@700&display=swap" rel="stylesheet">
     <style>
@@ -39,7 +51,7 @@
 </head>
 <body class="bg-yellow-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl p-6 md:p-8 space-y-6 border-4 border-purple-300">
+    <div class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl p-6 md:p-8 space-y-6 border-4 border-purple-300 relative">
         
         <header class="text-center">
             <!-- Updated image tag with a fallback placeholder URL -->
@@ -123,7 +135,7 @@
 
         let recognition;
         let isRecording = false;
-        
+
         // --- Globals for TTS Voice Selection ---
         let preferredVoice = null;
         const synth = window.speechSynthesis;
@@ -131,12 +143,9 @@
         // --- Voice Selection Logic (Enhanced for Chrome/Google Voices) ---
         function loadVoices() {
             const voices = synth.getVoices();
-            if (voices.length === 0) {
-                // Voices not ready yet, will be called again by onvoiceschanged
-                return; 
-            }
+            if (voices.length === 0) return;
 
-            // 1. HIGHEST PRIORITY: Look for Google's highest quality voices or other known good ones.
+            // 1. HIGHEST PRIORITY: Look for Google's highest quality voices.
             preferredVoice = voices.find(voice => 
                 voice.lang.match(/en-(US|GB)/i) && 
                 (
@@ -234,7 +243,6 @@
                     const txt = await page.getTextContent();
                     const str = txt.items.map(i => i.str).join(' ');
                     
-                    // Append to existing text or replace? Let's replace for a fresh idea.
                     promptInput.value = str;
                 } else {
                     // Image OCR Handling (Tesseract)
@@ -257,7 +265,7 @@
             } finally {
                 generateButton.disabled = false;
                 promptInput.disabled = false;
-                promptInput.dispatchEvent(new Event('input')); // Trigger input event to check button state
+                promptInput.dispatchEvent(new Event('input')); 
             }
         });
 
@@ -281,25 +289,14 @@
         
         // --- Core Functions ---
         
-        // Cache the working API endpoint so we don't have to check every time
         let workingApiEndpoint = null;
 
         async function callSecureApi(type, payload) {
             // Priority list: Vercel standard path first, then Netlify standard path
             const endpoints = ['/api/generate', '/.netlify/functions/generate'];
-            
-            // If we already found the working endpoint, prioritize it
-            if (workingApiEndpoint) {
-                const index = endpoints.indexOf(workingApiEndpoint);
-                if (index > -1) {
-                    endpoints.splice(index, 1);
-                    endpoints.unshift(workingApiEndpoint);
-                }
-            }
+            let backendFound = false;
 
-            let lastError;
-
-            // Try endpoints in order
+            // 1. Try backend endpoints
             for (const url of endpoints) {
                 try {
                     const response = await fetch(url, {
@@ -308,14 +305,10 @@
                         body: JSON.stringify({ type, payload })
                     });
 
-                    // If 404, the function likely resides at the other endpoint, so continue loop
-                    if (response.status === 404) {
-                        continue;
-                    }
-
-                    // If we get here, the endpoint exists (even if it returned a 500/400 error)
-                    workingApiEndpoint = url;
-
+                    if (response.status === 404) continue; // Not found, try next
+                    
+                    // Backend found!
+                    backendFound = true;
                     if (!response.ok) {
                         const errorText = await response.text();
                         throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
@@ -323,13 +316,12 @@
                     return await response.json();
 
                 } catch (error) {
-                    lastError = error;
+                    if(backendFound) throw error; // If backend was found but errored, throw it.
                 }
             }
-
-            // If loop finishes without success
-            console.error(`API call failed: ${lastError?.message || 'No endpoints found'}.`);
-            throw new Error("API call failed. Please check your connection."); 
+            
+            // If we loop through everything and find nothing (and no error was thrown above)
+            throw new Error("Backend connection failed. Please ensure the backend function is deployed."); 
         }
 
         async function generateStory() {
@@ -347,7 +339,6 @@
             };
 
             try {
-                // This call remains necessary for generating the text content
                 const result = await callSecureApi('text', payload); 
                 const storyText = result.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (storyText) {
@@ -365,26 +356,22 @@
             }
         }
 
-        // --- NEW Browser TTS Implementation (Option 2) ---
+        // --- Browser TTS Implementation ---
         function readStoryAloud() {
             const textToRead = storyContent.textContent;
             if (!textToRead) return;
 
-            // 1. Create a speech synthesis utterance
             const utterance = new SpeechSynthesisUtterance(textToRead);
 
-            // 2. Set the preferred voice found by loadVoices()
             if (preferredVoice) {
                 utterance.voice = preferredVoice;
-                utterance.rate = 1.0; // Adjust rate for better storytelling
+                utterance.rate = 1.0; 
             }
 
-            // 3. Set UI state
             statusDisplay.textContent = "Reading your story with the browser's voice... 📖";
             readButton.disabled = true;
             stopButton.classList.remove('hidden');
 
-            // 4. Set stop/end handlers
             utterance.onend = () => {
                 resetAudioControls();
                 statusDisplay.textContent = "The End!";
@@ -396,12 +383,10 @@
                 statusDisplay.textContent = "Browser TTS failed.";
             };
             
-            // 5. Speak!
             window.speechSynthesis.speak(utterance);
         }
 
         function stopReading() {
-            // Stops all browser speech synthesis immediately
             if (window.speechSynthesis.speaking) {
                 window.speechSynthesis.cancel();
                 resetAudioControls();
@@ -421,11 +406,9 @@
         }
 
         // --- Initialization ---
-        // Ensure the preferredVoice is set as soon as the browser loads voices.
         if (synth.onvoiceschanged !== undefined) {
             synth.onvoiceschanged = loadVoices;
         }
-        // Also call immediately, as voices might be ready instantly in some browsers.
         loadVoices(); 
         
     </script>
