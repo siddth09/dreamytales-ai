@@ -24,6 +24,8 @@ It also features advanced input methods, including Speech-to-Text (STT) and clie
 
 **Conversational AI:** This describes the overall experience. The user interacts with the application in a conversational way—by speaking to it and getting a response (the story and narration). It's an AI designed for natural human interaction.
 
+**Illustration AI:** Each story page receives a vibrant illustration using Google Imagen (via Gemini’s image generation API).
+
 **Client-side OCR:** Allows users to upload an image (.jpg, .png) or a single-page .pdf and extract the text to use as the story prompt.
 
 ---
@@ -33,6 +35,7 @@ It also features advanced input methods, including Speech-to-Text (STT) and clie
 - **Voice-to-Story (Speech-to-Text)**: Click the microphone, describe your story, and watch the magic happen.
 - **AI-Powered Tales**: Leverages the Google Gemini API to generate unique, age-appropriate fairy tales on any topic.
 - **Text-to-Speech Narration**: Click "Read Aloud" to have your story narrated with a gentle, friendly voice.
+- **Illustrations for Each Page**: Vibrant AI-generated images using Google Imagen.
 - **Fully Responsive**: Beautiful on desktops, tablets, and mobile phones.
 - **Secure & Serverless**: The API key is never exposed; built to scale effortlessly.
 
@@ -66,7 +69,7 @@ Frontend (HTML, Tailwind CSS, JavaScript)
 Vercel/Netlify Function (Serverless backend)
    │
    ▼
-Google Gemini API (Story & TTS)
+Google Gemini API (Story & TTS) + Google Imagen (Image Generation)
 ```
 
 **Architecture Details**:
@@ -86,12 +89,17 @@ Google Gemini API (Story & TTS)
 - **Google Gemini API**:  
   - For story generation: uses `gemini-2.5-flash-preview-05-20`.
   - For narration (text-to-speech): uses `gemini-2.5-flash-preview-tts`.
+ 
+- **Google Imagen API (via Gemini endpoints)**:
+  - Generates illustrations for each page based on descriptive prompts.
+  - Produces vibrant, child-friendly images.
 
 - **Flow**:
   1. User interacts with the web UI (voice or text).
   2. Frontend sends a request to the Vercel/Netlify serverless function.
   3. The function contacts the Google Gemini API (with the secure key).
-  4. The response (story or narration audio) is sent back to the frontend for display/playback.
+  4. Serverless API requests story, images, and audio from Google Gemini & Imagen.
+  5. The response (story or narration audio) is sent back to the frontend for display/playback.
 
 ---
 
@@ -123,8 +131,8 @@ Google Gemini API (Story & TTS)
 
 - **Frontend:** HTML, Tailwind CSS, Vanilla JavaScript
 - **Hosting & Backend:** Vercel/Netlify, Vercel/Netlify Functions (Serverless)
-- **AI & ML:** Google Gemini API (story and TTS models)
-- **OCR** Client-side Optical Character Recognition (OCR) for image and PDF uploads using Tesseract.js and PDF.js
+- **AI & ML:** Google Gemini API (story generation & TTS), Google Imagen (image generation)
+- **OCR:** Client-side Optical Character Recognition (OCR) for image and PDF uploads using Tesseract.js and PDF.js
 ---
 
 ## 📄 License
