@@ -7,11 +7,12 @@
 **AI Powered Fairy Tales Weaver**
 
 [![Demo Video](https://img.shields.io/badge/YouTube-Demo-red?logo=youtube)](https://www.youtube.com/watch?v=4fgu0A5EHz4)
-[![Live App](https://img.shields.io/badge/Live%20App-Visit%20Now-brightgreen?logo=netlify)](https://dreamytalesai.netlify.app/)
+[![Live App](https://img.shields.io/badge/Live%20App-Visit%20Now-brightgreen?logo=vercel)](https://dreamytales-ai.vercel.app/)
 
 ---
 
 DreamyTales AI is a magical web application that transforms children's voice commands into beautifully narrated fairy tales. Powered by advanced AI, it sparks creativity and turns storytelling into an interactive, enchanting experience.
+It also features advanced input methods, including Speech-to-Text (STT) and client-side Optical Character Recognition (OCR) for image and PDF uploads using Tesseract.js and PDF.js.
 
 **Generative AI:** The "storyteller", Gemini model generates a completely new, original fairy tale.
 
@@ -22,6 +23,8 @@ DreamyTales AI is a magical web application that transforms children's voice com
 **Text-to-Speech:** After the story is written, it takes that text and turns it into spoken audio for the child to listen to.
 
 **Conversational AI:** This describes the overall experience. The user interacts with the application in a conversational way—by speaking to it and getting a response (the story and narration). It's an AI designed for natural human interaction.
+
+**Client-side OCR:** Allows users to upload an image (.jpg, .png) or a single-page .pdf and extract the text to use as the story prompt.
 
 ---
 
@@ -37,7 +40,7 @@ DreamyTales AI is a magical web application that transforms children's voice com
 
 ## 🔗 Live App
 
-👉 [https://dreamytalesai.netlify.app/](https://dreamytalesai.netlify.app/)
+👉 [https://dreamytales-ai.vercel.app/](https://dreamytales-ai.vercel.app/)
 
 ---
 
@@ -60,7 +63,7 @@ User (Browser)
 Frontend (HTML, Tailwind CSS, JavaScript)
    │
    ▼
-Netlify Function (Serverless backend)
+Vercel/Netlify Function (Serverless backend)
    │
    ▼
 Google Gemini API (Story & TTS)
@@ -72,10 +75,10 @@ Google Gemini API (Story & TTS)
   - Static HTML, Tailwind CSS, and vanilla JavaScript.
   - Handles voice input, user interaction, and story display.
 
-- **Hosting (Netlify)**:  
+- **Hosting (Vercel/Netlify)**:  
   - The UI is deployed as a static site, globally distributed for speed and reliability.
 
-- **Serverless Function (Netlify Functions)**:  
+- **Serverless Function (Vercel/Netlify Functions)**:  
   - Handles requests for story generation and narration.
   - Securely stores the Google Gemini API key as an environment variable.
   - Keeps the API key hidden from the client/browser.
@@ -86,7 +89,7 @@ Google Gemini API (Story & TTS)
 
 - **Flow**:
   1. User interacts with the web UI (voice or text).
-  2. Frontend sends a request to the Netlify serverless function.
+  2. Frontend sends a request to the Vercel/Netlify serverless function.
   3. The function contacts the Google Gemini API (with the secure key).
   4. The response (story or narration audio) is sent back to the frontend for display/playback.
 
@@ -103,15 +106,15 @@ Google Gemini API (Story & TTS)
    - Go to [Google AI Studio](https://aistudio.google.com/).
    - Sign in and click "Get API key" to generate one.
 
-3. **Deploy on Netlify:**
-   - Create a free Netlify account.
+3. **Deploy on Vercel/Netlify:**
+   - Create a free Vercel/Netlify account.
    - Link your GitHub repo.
    - Go to Site settings > Environment variables and add:
      - Key: `GEMINI_API_KEY`
      - Value: _(your Google Gemini API key)_
 
 4. **Launch!**
-   - Netlify auto-deploys your site.
+   - Vercel/Netlify auto-deploys your site.
    - Every push to GitHub triggers a new deployment.
 
 ---
@@ -119,9 +122,9 @@ Google Gemini API (Story & TTS)
 ## 🛠️ Technologies Used
 
 - **Frontend:** HTML, Tailwind CSS, Vanilla JavaScript
-- **Hosting & Backend:** Netlify, Netlify Functions (Serverless)
+- **Hosting & Backend:** Vercel/Netlify, Vercel/Netlify Functions (Serverless)
 - **AI & ML:** Google Gemini API (story and TTS models)
-
+- **OCR** Client-side Optical Character Recognition (OCR) for image and PDF uploads using Tesseract.js and PDF.js
 ---
 
 ## 📄 License
