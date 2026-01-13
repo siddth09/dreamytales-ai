@@ -17,43 +17,17 @@
             }
         }
     </script>
-    <!-- Tesseract.js for OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <!-- PDF.js for PDF reading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Baloo+2:wght@700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #F3F4F6; /* Light gray background */
-        }
-        .baloo {
-            font-family: 'Baloo 2', cursive;
-        }
-        .story-content {
-            white-space: pre-wrap; /* Preserves line breaks in the story */
-        }
-        /* Custom animation for the microphone icon */
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% {
-                transform: scale(1.1);
-                opacity: 0.7;
-            }
-        }
-        .recording {
-            animation: pulse 1.5s infinite;
-        }
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #F3F4F6; }
+        .baloo { font-family: 'Baloo 2', cursive; }
+        .story-content { white-space: pre-wrap; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } }
+        .recording { animation: pulse 1.5s infinite; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body class="bg-yellow-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
@@ -68,10 +42,10 @@
             </svg>
         </button>
 
-        <!-- API KEY PANEL (Hidden by default) -->
+        <!-- API KEY PANEL -->
         <div id="api-key-panel" class="hidden bg-purple-50 p-4 rounded-lg border border-purple-200 mb-4 animate-fade-in">
             <h3 class="text-sm font-bold text-purple-800 mb-2">🔧 Preview Mode</h3>
-            <p class="text-xs text-gray-600 mb-2">The backend isn't found (normal in preview). Enter your API Key to test immediately.</p>
+            <p class="text-xs text-gray-600 mb-2">Enter your API Key to test immediately.</p>
             <div class="flex gap-2">
                 <input type="password" id="api-key-input" placeholder="Paste Gemini API Key here" class="flex-1 p-2 text-sm border border-gray-300 rounded focus:ring-purple-500 focus:border-purple-500">
                 <button id="save-key-btn" class="bg-purple-600 text-white px-4 py-2 rounded text-sm hover:bg-purple-700 transition">Save</button>
@@ -79,12 +53,7 @@
         </div>
 
         <header class="text-center">
-            <img 
-                src="assets/drmytls.png" 
-                alt="DreamyTales AI Logo" 
-                class="mx-auto mb-4 w-32 md:w-40 rounded-full shadow-lg" 
-                onerror="this.onerror=null; this.src='https://placehold.co/160x160/9333ea/ffffff?text=Dreamy+Tales'"
-            />
+            <img src="assets/drmytls.png" alt="DreamyTales AI Logo" class="mx-auto mb-4 w-32 md:w-40 rounded-full shadow-lg" onerror="this.onerror=null; this.src='https://placehold.co/160x160/9333ea/ffffff?text=Dreamy+Tales'"/>
             <h1 class="baloo text-4xl md:text-5xl font-bold text-purple-600">DreamyTales AI</h1>
             <p class="text-gray-500 mt-2">Tell me a story about...</p>
         </header>
@@ -92,7 +61,6 @@
         <div class="space-y-4">
             <div class="relative">
                 <textarea id="prompt-input" rows="3" class="w-full p-4 pr-24 text-lg border-2 border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 transition resize-none" placeholder="...a brave knight and a friendly dragon."></textarea>
-                
                 <div class="absolute top-1/2 right-3 -translate-y-1/2 flex items-center space-x-1 bg-white pl-2">
                     <label for="doc-upload" class="p-2 text-gray-400 hover:text-purple-600 cursor-pointer transition" title="Upload Image or PDF">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -100,7 +68,6 @@
                         </svg>
                     </label>
                     <input id="doc-upload" type="file" accept=".jpg,.jpeg,.png,.pdf" class="hidden" />
-
                     <button id="record-button" class="p-2 text-gray-500 hover:text-purple-600 transition" title="Voice Input">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/>
@@ -122,7 +89,6 @@
             <h2 class="baloo text-2xl font-bold text-yellow-800">Your Magical Tale</h2>
             <p id="story-content" class="text-gray-700 leading-relaxed"></p>
             
-            <!-- Image Generation Section -->
             <div id="illustration-section" class="border-t-2 border-yellow-200 pt-4 mt-4">
                 <div id="image-placeholder" class="hidden text-center p-4">
                      <div class="animate-pulse flex flex-col items-center">
@@ -156,12 +122,12 @@
                 </button>
             </div>
         </div>
-
     </div>
 
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
+        // --- Elements ---
         const promptInput = document.getElementById('prompt-input');
         const recordButton = document.getElementById('record-button');
         const generateButton = document.getElementById('generate-button');
@@ -172,29 +138,21 @@
         const readButton = document.getElementById('read-button');
         const stopButton = document.getElementById('stop-button');
         const docUploadInput = document.getElementById('doc-upload');
-
-        // Image Generation Elements
         const imageBtn = document.getElementById('image-btn');
         const imagePlaceholder = document.getElementById('image-placeholder');
         const imageResult = document.getElementById('image-result');
         const generatedImage = document.getElementById('generated-image');
-
         const settingsToggle = document.getElementById('settings-toggle');
         const apiKeyPanel = document.getElementById('api-key-panel');
         const apiKeyInput = document.getElementById('api-key-input');
         const saveKeyBtn = document.getElementById('save-key-btn');
 
-        let recognition;
-        let isRecording = false;
-
-        // --- PREVIEW MODE: API Key Handling ---
+        let recognition, isRecording = false;
         let previewApiKey = localStorage.getItem('dreamytales_key') || '';
         if (previewApiKey) apiKeyInput.value = previewApiKey;
 
-        settingsToggle.addEventListener('click', () => {
-            apiKeyPanel.classList.toggle('hidden');
-        });
-
+        // --- Setup Listeners ---
+        settingsToggle.addEventListener('click', () => apiKeyPanel.classList.toggle('hidden'));
         saveKeyBtn.addEventListener('click', () => {
             const key = apiKeyInput.value.trim();
             if (key) {
@@ -206,51 +164,31 @@
             }
         });
 
-        // --- TTS Voice Setup ---
+        // --- TTS ---
         let preferredVoice = null;
         const synth = window.speechSynthesis;
-
         function loadVoices() {
             const voices = synth.getVoices();
             if (voices.length === 0) return;
-
-            preferredVoice = voices.find(voice => 
-                voice.lang.match(/en-(US|GB)/i) && 
-                (voice.name.includes('Google') || voice.name.includes('Microsoft') || voice.name.includes('Samantha'))
-            ) || voices.find(voice => voice.lang.match(/en-(US|GB)/i)) || voices[0];
+            preferredVoice = voices.find(v => v.lang.match(/en-(US|GB)/i) && (v.name.includes('Google') || v.name.includes('Microsoft'))) || voices[0];
         }
-
         if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = loadVoices;
         loadVoices();
 
         // --- Speech Recognition ---
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            recognition = new SpeechRecognition();
+        if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SR();
             recognition.continuous = true;
             recognition.interimResults = true;
-
-            recognition.onstart = () => {
-                isRecording = true;
-                statusDisplay.textContent = "Listening... 🎤";
-                recordButton.classList.add('text-red-500', 'recording');
+            recognition.onstart = () => { isRecording = true; statusDisplay.textContent = "Listening... 🎤"; recordButton.classList.add('text-red-500', 'recording'); };
+            recognition.onend = () => { isRecording = false; statusDisplay.textContent = ""; recordButton.classList.remove('text-red-500', 'recording'); if(promptInput.value) generateButton.disabled = false; };
+            recognition.onresult = (e) => {
+                let final = '';
+                for (let i = e.resultIndex; i < e.results.length; ++i) if (e.results[i].isFinal) final += e.results[i][0].transcript;
+                if (final) { promptInput.value = (promptInput.value + ' ' + final).trim(); generateButton.disabled = false; }
             };
-            recognition.onend = () => {
-                isRecording = false;
-                statusDisplay.textContent = "";
-                recordButton.classList.remove('text-red-500', 'recording');
-                if (promptInput.value) generateButton.disabled = false;
-            };
-            recognition.onresult = (event) => {
-                let finalTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
-                }
-                if (finalTranscript) {
-                    promptInput.value = (promptInput.value + ' ' + finalTranscript).trim();
-                    generateButton.disabled = false;
-                }
-            };
+            recordButton.addEventListener('click', () => isRecording ? recognition.stop() : recognition.start());
         } else {
             recordButton.disabled = true;
         }
@@ -259,16 +197,14 @@
         docUploadInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
             statusDisplay.textContent = "📄 Reading...";
             generateButton.disabled = true;
-
             try {
                 let text = "";
                 if (file.type === 'application/pdf') {
                     if (!window.pdfjsLib) throw new Error("PDF lib missing");
-                    const buffer = await file.arrayBuffer();
-                    const pdf = await pdfjsLib.getDocument(buffer).promise;
+                    const buf = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument(buf).promise;
                     const page = await pdf.getPage(1);
                     const txt = await page.getTextContent();
                     text = txt.items.map(i => i.str).join(' ');
@@ -281,24 +217,11 @@
                 promptInput.value = text;
                 statusDisplay.textContent = "✅ Read!";
                 setTimeout(() => statusDisplay.textContent = "", 2000);
-            } catch (err) {
-                console.error(err);
-                statusDisplay.textContent = "❌ Failed to read file";
-            } finally {
-                generateButton.disabled = false;
-            }
+            } catch (err) { console.error(err); statusDisplay.textContent = "❌ Reading failed"; }
+            finally { generateButton.disabled = false; }
         });
 
-        // --- Event Listeners ---
-        recordButton.addEventListener('click', () => {
-            if (isRecording) recognition.stop();
-            else recognition.start();
-        });
-
-        promptInput.addEventListener('input', () => {
-            generateButton.disabled = !promptInput.value.trim();
-        });
-
+        promptInput.addEventListener('input', () => generateButton.disabled = !promptInput.value.trim());
         generateButton.addEventListener('click', generateStory);
         imageBtn.addEventListener('click', generateIllustration);
         readButton.addEventListener('click', readStoryAloud);
@@ -309,7 +232,6 @@
             const endpoints = ['/api/generate', '/.netlify/functions/generate'];
             let backendFound = false;
 
-            // 1. Backend Try
             for (const url of endpoints) {
                 try {
                     const response = await fetch(url, {
@@ -318,8 +240,13 @@
                         body: JSON.stringify({ type, payload })
                     });
                     if (response.status === 404) continue;
-                    
                     backendFound = true;
+
+                    // Handle specific errors gracefully
+                    if (response.status === 402) {
+                         throw new Error('BILLING_REQUIRED');
+                    }
+
                     if (!response.ok) {
                         const txt = await response.text();
                         throw new Error(`Backend: ${response.status} - ${txt}`);
@@ -329,30 +256,23 @@
                     if (backendFound) throw error;
                 }
             }
-
-            // 2. Client-Side Fallback (Preview Mode)
-            console.warn("No backend found. Trying client-side.");
+            
+            // Client-side fallback
             if (previewApiKey) {
-                let url = '';
-                let finalPayload = payload;
-
-                if (type === 'text') {
-                    url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${previewApiKey}`;
-                } else if (type === 'image') {
-                    // Use standard Imagen endpoint for direct client calls if supported
-                    url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${previewApiKey}`;
-                }
-
+                let url = type === 'text' 
+                    ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${previewApiKey}`
+                    : `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${previewApiKey}`;
+                
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(finalPayload)
+                    body: JSON.stringify(payload)
                 });
-
-                if (!response.ok) {
-                    const txt = await response.text();
-                    throw new Error(`Client API: ${response.status} - ${txt}`);
+                if (response.status === 400 || response.status === 403) {
+                     const txt = await response.text();
+                     if(txt.includes('billed')) throw new Error('BILLING_REQUIRED');
                 }
+                if (!response.ok) throw new Error(`Client API: ${response.status}`);
                 return await response.json();
             }
             throw new Error("PREVIEW_MODE_NO_KEY");
@@ -361,71 +281,55 @@
         async function generateStory() {
             const prompt = promptInput.value.trim();
             if (!prompt) return;
-
             setLoadingState(true, 'Conjuring story...');
             storyContainer.classList.add('hidden');
             resetImageSection();
 
-            const systemPrompt = "You are a master storyteller for children. Write a short, enchanting fairy tale (150-200 words). Clear beginning, middle, happy end. Simple language.";
-
             try {
-                const result = await callSecureApi('text', {
+                const res = await callSecureApi('text', {
                     contents: [{ parts: [{ text: prompt }] }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                    systemInstruction: { parts: [{ text: "You are a master storyteller for children. Write a short, enchanting fairy tale (150 words)." }] }
                 });
-                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (text) {
-                    storyContent.textContent = text;
-                    storyContainer.classList.remove('hidden');
-                    resetAudioControls();
-                } else {
-                    throw new Error("No story returned.");
-                }
-            } catch (error) {
-                handleError(error);
-            } finally {
-                setLoadingState(false);
-            }
+                storyContent.textContent = res.candidates?.[0]?.content?.parts?.[0]?.text || "No story returned.";
+                storyContainer.classList.remove('hidden');
+                resetAudioControls();
+            } catch (error) { handleError(error); } 
+            finally { setLoadingState(false); }
         }
 
         async function generateIllustration() {
-            const storyText = storyContent.textContent;
-            if (!storyText) return;
-
+            const prompt = promptInput.value.trim();
+            if (!prompt) return;
+            
             imageBtn.classList.add('hidden');
             imagePlaceholder.classList.remove('hidden');
             imageResult.classList.add('hidden');
 
-            // Create a prompt for the image based on the user's input
-            const userPrompt = promptInput.value.trim();
-            const imagePrompt = `Children's storybook illustration of ${userPrompt}. Colorful, magical, warm style. High quality.`;
-
             try {
-                // Imagen Payload Structure
-                const payload = {
-                    instances: [{ prompt: imagePrompt }],
-                    parameters: { sampleCount: 1 }
-                };
+                // MODIFIED PROMPT FOR WATERCOLOUR STYLE
+                const stylePrompt = `Watercolour style children's book illustration of ${prompt}. Soft, pastel colors, gentle brushstrokes, cute, child-friendly, artistic.`;
 
-                const result = await callSecureApi('image', payload);
-                
-                // Parse Imagen response
-                // Response format: { predictions: [ { bytesBase64Encoded: "..." } ] }
-                const b64 = result.predictions?.[0]?.bytesBase64Encoded || result.predictions?.[0];
-                
+                const res = await callSecureApi('image', {
+                    instances: [{ prompt: stylePrompt }],
+                    parameters: { sampleCount: 1 }
+                });
+                const b64 = res.predictions?.[0]?.bytesBase64Encoded || res.predictions?.[0];
                 if (b64) {
                     generatedImage.src = `data:image/png;base64,${b64}`;
                     imagePlaceholder.classList.add('hidden');
                     imageResult.classList.remove('hidden');
-                } else {
-                    throw new Error("No image data returned.");
-                }
-
+                } else throw new Error("No image data");
             } catch (error) {
                 console.error("Image gen failed", error);
-                statusDisplay.textContent = "Could not paint the picture right now.";
-                imageBtn.classList.remove('hidden'); // Show button again to retry
+                imageBtn.classList.remove('hidden');
                 imagePlaceholder.classList.add('hidden');
+                
+                if (error.message === 'BILLING_REQUIRED' || error.message.includes('BILLING_REQUIRED')) {
+                    statusDisplay.textContent = "⚠️ Images require a paid Google Cloud account.";
+                } else {
+                    statusDisplay.textContent = "Could not paint the picture right now.";
+                }
+                setTimeout(() => statusDisplay.textContent = "", 5000);
             }
         }
 
@@ -442,37 +346,17 @@
                 statusDisplay.textContent = "⚠️ Preview Mode: Click gear icon ⚙️ to add API Key.";
                 apiKeyPanel.classList.remove('hidden');
                 apiKeyInput.focus();
+            } else if (error.message === 'BILLING_REQUIRED') {
+                 statusDisplay.textContent = "⚠️ This feature requires a paid Google Cloud account.";
             } else {
                 statusDisplay.textContent = "Oh no! Something went wrong.";
             }
         }
 
-        function setLoadingState(isLoading, msg = '') {
-            generateButton.disabled = isLoading;
-            statusDisplay.textContent = msg;
-        }
-
-        // --- TTS ---
-        function readStoryAloud() {
-            const text = storyContent.textContent;
-            if (!text) return;
-            const u = new SpeechSynthesisUtterance(text);
-            if (preferredVoice) { u.voice = preferredVoice; u.rate = 1.0; }
-            readButton.disabled = true;
-            stopButton.classList.remove('hidden');
-            u.onend = () => { resetAudioControls(); };
-            window.speechSynthesis.speak(u);
-        }
-
-        function stopReading() {
-            window.speechSynthesis.cancel();
-            resetAudioControls();
-        }
-
-        function resetAudioControls() {
-            readButton.disabled = false;
-            stopButton.classList.add('hidden');
-        }
+        function setLoadingState(isLoading, msg = '') { generateButton.disabled = isLoading; statusDisplay.textContent = msg; }
+        function readStoryAloud() { const u = new SpeechSynthesisUtterance(storyContent.textContent); if(preferredVoice) u.voice = preferredVoice; readButton.disabled=true; stopButton.classList.remove('hidden'); u.onend=resetAudioControls; window.speechSynthesis.speak(u); }
+        function stopReading() { window.speechSynthesis.cancel(); resetAudioControls(); }
+        function resetAudioControls() { readButton.disabled=false; stopButton.classList.add('hidden'); }
     </script>
 </body>
 </html>
